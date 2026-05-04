@@ -37,9 +37,9 @@ export function ChatSidebar({
       {/* Sidebar panel */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-30 flex w-72 flex-col border-r border-border bg-sidebar transition-transform duration-300 ease-in-out",
-          "lg:relative lg:z-auto lg:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-30 flex w-72 shrink-0 flex-col border-r border-border bg-sidebar transition-transform duration-300 ease-in-out",
+          "lg:relative lg:inset-y-0 lg:z-auto lg:transition-none",
+          isOpen ? "translate-x-0 lg:translate-x-0" : "-translate-x-full",
           !isOpen && "lg:hidden",
         )}
       >

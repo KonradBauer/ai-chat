@@ -7,7 +7,9 @@ import { ChatSidebar } from "@/components/chat/chat-sidebar";
 import { useChat } from "@/hooks/use-chat";
 
 export function ChatLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(
+    () => typeof window !== "undefined" && window.innerWidth >= 1024,
+  );
   const {
     conversations,
     activeConversation,
