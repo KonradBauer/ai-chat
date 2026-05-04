@@ -4,14 +4,33 @@ Streaming chat interface for the Agentica take-home. React 19, TypeScript, Tailw
 
 ## Running it
 
+**1. Install dependencies**
+
 ```bash
 npm install
+```
+
+**2. Configure environment**
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and fill in your values:
+
+```
+LLM_API_KEY=your_api_key_here
+LLM_BASE_URL=https://your-llm-provider-url
+LLM_MODEL=unsloth/Qwen3.5-9B
+```
+
+**3. Start dev server**
+
+```bash
 npm run dev
 ```
 
-That's it. Open `http://localhost:5173`. Node 20+ required.
-
-The API key is already in `.env` — no extra setup needed.
+Open `http://localhost:5173`. Node 20+ required.
 
 ---
 
