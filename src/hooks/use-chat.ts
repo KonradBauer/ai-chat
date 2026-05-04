@@ -19,13 +19,17 @@ function makeConversation(): Conversation {
   };
 }
 
-function loadInitialState(): { conversations: Conversation[]; activeId: string } {
+function loadInitialState(): {
+  conversations: Conversation[];
+  activeId: string;
+} {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as Conversation[];
       if (Array.isArray(parsed) && parsed.length > 0) {
-        const storedActiveId = localStorage.getItem(ACTIVE_ID_KEY) ?? parsed[0].id;
+        const storedActiveId =
+          localStorage.getItem(ACTIVE_ID_KEY) ?? parsed[0].id;
         const activeId = parsed.find((c) => c.id === storedActiveId)
           ? storedActiveId
           : parsed[0].id;
@@ -40,12 +44,10 @@ function loadInitialState(): { conversations: Conversation[]; activeId: string }
 }
 
 export function useChat() {
-  const [conversations, setConversations] = useState<Conversation[]>(
-    () => loadInitialState().conversations,
-  );
-  const [activeId, setActiveId] = useState<string>(
-    () => loadInitialState().activeId,
-  );
+  // Single useState call prevents two separate loadInitialState() calls from
+  // generating different UUIDs, which caused activeId to not match any conversation.
+  const [{ conversations, activeId }, setCoreState] =
+    useState(loadInitialState);
   const [status, setStatus] = useState<ChatStatus>({ type: "idle" });
   const abortRef = useRef<AbortController | null>(null);
 
@@ -64,15 +66,20 @@ export function useChat() {
     id: string,
     updater: (c: Conversation) => Conversation,
   ) {
-    setConversations((prev) =>
-      prev.map((c) => (c.id === id ? updater(c) : c)),
-    );
+    setCoreState((prev) => ({
+      ...prev,
+      conversations: prev.conversations.map((c) =>
+        c.id === id ? updater(c) : c,
+      ),
+    }));
   }
 
   function createConversation() {
     const next = makeConversation();
-    setConversations((prev) => [next, ...prev]);
-    setActiveId(next.id);
+    setCoreState((prev) => ({
+      conversations: [next, ...prev.conversations],
+      activeId: next.id,
+    }));
     abortRef.current?.abort();
     setStatus({ type: "idle" });
   }
@@ -81,21 +88,18 @@ export function useChat() {
     if (id === activeId) return;
     abortRef.current?.abort();
     setStatus({ type: "idle" });
-    setActiveId(id);
+    setCoreState((prev) => ({ ...prev, activeId: id }));
   }
 
   function deleteConversation(id: string) {
     const remaining = conversations.filter((c) => c.id !== id);
     if (remaining.length === 0) {
       const fresh = makeConversation();
-      setConversations([fresh]);
-      setActiveId(fresh.id);
+      setCoreState({ conversations: [fresh], activeId: fresh.id });
       return;
     }
-    setConversations(remaining);
-    if (id === activeId) {
-      setActiveId(remaining[0].id);
-    }
+    const newActiveId = id === activeId ? remaining[0].id : activeId;
+    setCoreState({ conversations: remaining, activeId: newActiveId });
   }
 
   async function streamResponse(
@@ -116,10 +120,15 @@ export function useChat() {
           ),
         }));
       }
-      setStatus({ type: "idle" });
+      // Only update status if this stream is still the active one
+      if (abortRef.current === controller) {
+        setStatus({ type: "idle" });
+      }
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") {
-        setStatus({ type: "idle" });
+        if (abortRef.current === controller) {
+          setStatus({ type: "idle" });
+        }
         return;
       }
       const message =
