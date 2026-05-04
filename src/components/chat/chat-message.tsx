@@ -1,5 +1,6 @@
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ChatMarkdown } from "@/components/chat/chat-markdown";
 import { cn } from "@/lib/utils";
 import type { Message } from "@/lib/types";
 
@@ -45,16 +46,25 @@ export function ChatMessage({
               : "rounded-bl-sm bg-transparent text-foreground",
           )}
         >
-          {message.content || (isStreaming ? null : (
-            <span className="text-muted-foreground italic">
-              (empty response)
-            </span>
-          ))}
-          {isStreaming && (
+          {isUser ? (
+            <span className="whitespace-pre-wrap">{message.content}</span>
+          ) : message.content ? (
+            <>
+              <ChatMarkdown content={message.content} />
+              {isStreaming && (
+                <span
+                  aria-hidden
+                  className="ml-0.5 inline-block h-[1em] w-px animate-[blink_1s_ease-in-out_infinite] bg-current align-middle"
+                />
+              )}
+            </>
+          ) : isStreaming ? (
             <span
               aria-hidden
-              className="ml-0.5 inline-block h-[1em] w-px animate-[blink_1s_ease-in-out_infinite] bg-current align-middle"
+              className="inline-block h-[1em] w-px animate-[blink_1s_ease-in-out_infinite] bg-current align-middle"
             />
+          ) : (
+            <span className="italic text-muted-foreground">(empty response)</span>
           )}
         </div>
 
