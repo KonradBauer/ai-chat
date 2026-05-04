@@ -35,11 +35,11 @@ export function ChatInput({ isStreaming, onSend, onStop }: ChatInputProps) {
   }
 
   return (
-    <div className="border-t border-border bg-background px-2 py-3 sm:px-4 sm:py-4">
+    <div className="border-t border-border px-2 py-3 sm:px-4 sm:py-4">
       <div className="mx-auto w-full max-w-3xl">
         <div
           className={cn(
-            "flex items-end gap-2 rounded-2xl border border-input bg-background px-3 py-2 transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/30 sm:px-4",
+            "flex items-center gap-2 rounded-2xl border border-input bg-background px-3 py-1 transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/30 sm:px-4",
           )}
         >
           <Textarea
@@ -50,10 +50,9 @@ export function ChatInput({ isStreaming, onSend, onStop }: ChatInputProps) {
             placeholder="Message…"
             rows={1}
             className={cn(
-              "max-h-40 min-h-0 flex-1 resize-none border-0 bg-transparent p-0 text-sm shadow-none outline-none focus-visible:border-0 focus-visible:ring-0 sm:text-base",
+              "max-h-50 min-h-0 flex-1 resize-none border-0 bg-transparent py-1.5 text-sm shadow-none outline-none focus-visible:border-0 focus-visible:ring-0 dark:bg-transparent sm:text-base",
               "placeholder:text-muted-foreground/60",
             )}
-            disabled={false}
           />
 
           {isStreaming ? (
@@ -61,7 +60,7 @@ export function ChatInput({ isStreaming, onSend, onStop }: ChatInputProps) {
               variant="default"
               size="icon"
               onClick={onStop}
-              className="mb-0.5 shrink-0"
+              className="shrink-0"
               aria-label="Stop generating"
             >
               <Square className="size-3.5 fill-current" />
@@ -72,7 +71,7 @@ export function ChatInput({ isStreaming, onSend, onStop }: ChatInputProps) {
               size="icon"
               onClick={handleSend}
               disabled={isEmpty}
-              className="mb-0.5 shrink-0"
+              className="shrink-0"
               aria-label="Send message"
             >
               <ArrowUp className="size-4" />
