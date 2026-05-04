@@ -111,7 +111,8 @@ function ConversationItem({
       )}
     >
       <button
-        className="flex min-w-0 flex-1 items-center gap-2 text-left"
+        className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-left"
+        aria-current={isActive ? "true" : undefined}
         onClick={() => onSelect(conversation.id)}
       >
         <MessageSquare className="size-3.5 shrink-0 opacity-60" />

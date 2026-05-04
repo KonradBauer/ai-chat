@@ -1,23 +1,23 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const SCROLL_THRESHOLD = 80;
 
-export function useAutoScroll(dependency: unknown) {
+export function useAutoScroll(dependency: unknown, isStreaming: boolean) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isUserScrolledUp, setIsUserScrolledUp] = useState(false);
   const isUserScrolledUpRef = useRef(false);
 
-  const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+  function scrollToBottom(behavior: ScrollBehavior = "smooth") {
     const el = containerRef.current;
     if (!el) return;
     el.scrollTo({ top: el.scrollHeight, behavior });
-  }, []);
+  }
 
-  const resumeAutoScroll = useCallback(() => {
+  function resumeAutoScroll() {
     isUserScrolledUpRef.current = false;
     setIsUserScrolledUp(false);
-    scrollToBottom();
-  }, [scrollToBottom]);
+    scrollToBottom("smooth");
+  }
 
   useEffect(() => {
     const el = containerRef.current;
@@ -38,9 +38,10 @@ export function useAutoScroll(dependency: unknown) {
 
   useEffect(() => {
     if (!isUserScrolledUpRef.current) {
-      scrollToBottom("smooth");
+      // instant during stream to avoid animation pile-up; smooth for discrete jumps
+      scrollToBottom(isStreaming ? "instant" : "smooth");
     }
-  }, [dependency, scrollToBottom]);
+  }, [dependency, isStreaming]);
 
-  return { containerRef, isUserScrolledUp, resumeAutoScroll, scrollToBottom };
+  return { containerRef, isUserScrolledUp, resumeAutoScroll };
 }

@@ -1,5 +1,7 @@
 import type { Message } from "@/lib/types";
 
+const MODEL = "unsloth/Qwen3.5-9B";
+
 interface LlmMessage {
   role: "user" | "assistant" | "system";
   content: string;
@@ -31,7 +33,7 @@ export async function* streamChat(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "unsloth/Qwen3.5-9B",
+      model: MODEL,
       messages: toApiMessages(messages),
       stream: true,
     }),

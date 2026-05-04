@@ -54,18 +54,47 @@ export function useChat() {
   }
 
   function deleteConversation(id: string) {
-    setConversations((prev) => {
-      const next = prev.filter((c) => c.id !== id);
-      if (next.length === 0) {
-        const fresh = makeConversation();
-        setActiveId(fresh.id);
-        return [fresh];
+    const remaining = conversations.filter((c) => c.id !== id);
+    if (remaining.length === 0) {
+      const fresh = makeConversation();
+      setConversations([fresh]);
+      setActiveId(fresh.id);
+      return;
+    }
+    setConversations(remaining);
+    if (id === activeId) {
+      setActiveId(remaining[0].id);
+    }
+  }
+
+  async function streamResponse(
+    conversationId: string,
+    assistantId: string,
+    history: Message[],
+  ) {
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setStatus({ type: "streaming", messageId: assistantId });
+
+    try {
+      for await (const token of streamChat(history, controller.signal)) {
+        updateConversation(conversationId, (c) => ({
+          ...c,
+          messages: c.messages.map((m) =>
+            m.id === assistantId ? { ...m, content: m.content + token } : m,
+          ),
+        }));
       }
-      if (id === activeId) {
-        setActiveId(next[0].id);
+      setStatus({ type: "idle" });
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
+        setStatus({ type: "idle" });
+        return;
       }
-      return next;
-    });
+      const message =
+        err instanceof Error ? err.message : "Unknown error occurred";
+      setStatus({ type: "error", error: message, messageId: assistantId });
+    }
   }
 
   async function sendMessage(content: string) {
@@ -92,44 +121,16 @@ export function useChat() {
 
     const conversationId = activeId;
 
-    updateConversation(conversationId, (c) => {
-      const isFirstMessage = c.messages.length === 0;
-      return {
-        ...c,
-        title: isFirstMessage ? trimmed.slice(0, 40) : c.title,
-        messages: [...c.messages, userMessage, assistantMessage],
-        updatedAt: Date.now(),
-      };
-    });
+    updateConversation(conversationId, (c) => ({
+      ...c,
+      title: c.messages.length === 0 ? trimmed.slice(0, 40) : c.title,
+      messages: [...c.messages, userMessage, assistantMessage],
+      updatedAt: Date.now(),
+    }));
 
-    const controller = new AbortController();
-    abortRef.current = controller;
-    setStatus({ type: "streaming", messageId: assistantId });
-
-    const allMessages = [
-      ...activeConversation.messages,
-      userMessage,
-    ];
-
-    try {
-      for await (const token of streamChat(allMessages, controller.signal)) {
-        updateConversation(conversationId, (c) => ({
-          ...c,
-          messages: c.messages.map((m) =>
-            m.id === assistantId ? { ...m, content: m.content + token } : m,
-          ),
-        }));
-      }
-      setStatus({ type: "idle" });
-    } catch (err) {
-      if (err instanceof Error && err.name === "AbortError") {
-        setStatus({ type: "idle" });
-        return;
-      }
-      const message =
-        err instanceof Error ? err.message : "Unknown error occurred";
-      setStatus({ type: "error", error: message, messageId: assistantId });
-    }
+    // Snapshot before state update flushes — correct history for LLM
+    const history = [...activeConversation.messages, userMessage];
+    await streamResponse(conversationId, assistantId, history);
   }
 
   function stopStreaming() {
@@ -142,12 +143,24 @@ export function useChat() {
     const lastUser = [...messages].reverse().find((m) => m.role === "user");
     if (!lastUser) return;
 
+    const assistantId = makeId();
+    const freshAssistant: Message = {
+      id: assistantId,
+      role: "assistant",
+      content: "",
+      createdAt: Date.now(),
+    };
+
+    // Replace last (failed) assistant message with fresh placeholder
     updateConversation(activeId, (c) => ({
       ...c,
-      messages: c.messages.filter((m) => m.id !== activeConversation.messages.at(-1)?.id),
+      messages: [...c.messages.slice(0, -1), freshAssistant],
+      updatedAt: Date.now(),
     }));
 
-    void sendMessage(lastUser.content);
+    // History = messages up to and including the last user message (no failed assistant)
+    const history = messages.slice(0, -1);
+    void streamResponse(activeId, assistantId, history);
   }
 
   return {

@@ -15,12 +15,13 @@ export function ChatMessageList({
   status,
   onRetry,
 }: ChatMessageListProps) {
+  const isStreaming = status.type === "streaming";
   const { containerRef, isUserScrolledUp, resumeAutoScroll } = useAutoScroll(
     conversation.messages,
+    isStreaming,
   );
 
-  const streamingMessageId =
-    status.type === "streaming" ? status.messageId : null;
+  const streamingMessageId = isStreaming ? status.messageId : null;
   const errorMessageId = status.type === "error" ? status.messageId : null;
 
   return (

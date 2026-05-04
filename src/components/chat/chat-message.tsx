@@ -52,10 +52,12 @@ export function ChatMessage({
             <>
               <ChatMarkdown content={message.content} />
               {isStreaming && (
-                <span
-                  aria-hidden
-                  className="ml-0.5 inline-block h-[1em] w-px animate-[blink_1s_ease-in-out_infinite] bg-current align-middle"
-                />
+                <p className="-mt-2 mb-0">
+                  <span
+                    aria-hidden
+                    className="inline-block h-[1em] w-px animate-[blink_1s_ease-in-out_infinite] bg-current align-middle"
+                  />
+                </p>
               )}
             </>
           ) : isStreaming ? (

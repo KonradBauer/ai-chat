@@ -26,7 +26,7 @@ export function ChatLayout() {
 
   function handleSelectConversation(id: string) {
     selectConversation(id);
-    setSidebarOpen(false);
+    if (window.innerWidth < 1024) setSidebarOpen(false);
   }
 
   return (
