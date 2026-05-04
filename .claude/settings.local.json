@@ -5,6 +5,10 @@
       "Bash(npx shadcn@latest *)",
       "Bash(npx tsc *)",
       "Bash(npm run *)"
+    ],
+    "deny": [
+      "**/.env",
+      "**/.env.*"
     ]
   }
 }
