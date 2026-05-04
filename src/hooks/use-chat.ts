@@ -1,6 +1,9 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { streamChat } from "@/lib/llm-client";
 import type { ChatStatus, Conversation, Message } from "@/lib/types";
+
+const STORAGE_KEY = "agentica:conversations";
+const ACTIVE_ID_KEY = "agentica:activeId";
 
 function makeId(): string {
   return crypto.randomUUID();
@@ -16,15 +19,43 @@ function makeConversation(): Conversation {
   };
 }
 
+function loadInitialState(): { conversations: Conversation[]; activeId: string } {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Conversation[];
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const storedActiveId = localStorage.getItem(ACTIVE_ID_KEY) ?? parsed[0].id;
+        const activeId = parsed.find((c) => c.id === storedActiveId)
+          ? storedActiveId
+          : parsed[0].id;
+        return { conversations: parsed, activeId };
+      }
+    }
+  } catch {
+    // corrupted data — fall through to fresh state
+  }
+  const fresh = makeConversation();
+  return { conversations: [fresh], activeId: fresh.id };
+}
+
 export function useChat() {
-  const [conversations, setConversations] = useState<Conversation[]>(() => [
-    makeConversation(),
-  ]);
+  const [conversations, setConversations] = useState<Conversation[]>(
+    () => loadInitialState().conversations,
+  );
   const [activeId, setActiveId] = useState<string>(
-    () => conversations[0].id,
+    () => loadInitialState().activeId,
   );
   const [status, setStatus] = useState<ChatStatus>({ type: "idle" });
   const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
+  }, [conversations]);
+
+  useEffect(() => {
+    localStorage.setItem(ACTIVE_ID_KEY, activeId);
+  }, [activeId]);
 
   const activeConversation =
     conversations.find((c) => c.id === activeId) ?? conversations[0];
