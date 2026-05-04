@@ -81,10 +81,11 @@ First things with another 3 hours:
 2. Dark/light mode toggle with `localStorage` persistence
 3. `visualViewport` resize listener for mobile — the software keyboard on iOS/Android pushes the input behind the viewport
 4. Syntax highlighting via `rehype-highlight` — code block structure is already in place
+5. I would remove code comments before a production release
 
 ### 7. Time Spent
 
-About **2.5 hours** across planning, implementation in 6 phases, a code review pass, and iterative fixes.
+About **~ 2.5 hours** across planning, implementation in 6 phases, a code review pass, and iterative fixes.
 
 What took longer than expected:
 
