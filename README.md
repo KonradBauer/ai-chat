@@ -1,4 +1,4 @@
-# Agentica AI Chat
+#AI Chat
 
 Streaming chat interface for the Agentica take-home. React 19, TypeScript, Tailwind v4, Vite.
 
